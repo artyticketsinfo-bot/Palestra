@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { Dumbbell, Eye, EyeOff, Mail, Lock, LogIn, Chrome } from 'lucide-react';
+import { Dumbbell, Eye, EyeOff, Mail, Lock, LogIn, Chrome, User } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 export default function Login() {
   const { signInWithEmail, signInWithGoogle, signUpWithEmail } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,7 +38,12 @@ export default function Login() {
           localStorage.removeItem('gymmaster_remembered_email');
         }
       } else {
-        await signUpWithEmail(email, password);
+        if (password !== confirmPassword) {
+          setError('Le password non coincidono');
+          setLoading(false);
+          return;
+        }
+        await signUpWithEmail(email, password, firstName, lastName);
       }
     } catch (err: any) {
       setError(err.message || 'Errore durante l\'accesso');
@@ -64,6 +72,39 @@ export default function Login() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-5">
+          {!isLogin && (
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-stone-400 uppercase tracking-widest ml-1">Nome</label>
+                <div className="relative group">
+                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-300 group-focus-within:text-emerald-500 transition-colors" />
+                  <input
+                    type="text"
+                    required
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    placeholder="Es. Mario"
+                    className="w-full pl-12 pr-4 py-4 bg-stone-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all outline-none text-stone-900 font-medium"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-stone-400 uppercase tracking-widest ml-1">Cognome</label>
+                <div className="relative group">
+                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-300 group-focus-within:text-emerald-500 transition-colors" />
+                  <input
+                    type="text"
+                    required
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    placeholder="Es. Rossi"
+                    className="w-full pl-12 pr-4 py-4 bg-stone-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all outline-none text-stone-900 font-medium"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="space-y-2">
             <label className="text-xs font-bold text-stone-400 uppercase tracking-widest ml-1">Email</label>
             <div className="relative group">
@@ -100,6 +141,23 @@ export default function Login() {
               </button>
             </div>
           </div>
+
+          {!isLogin && (
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-stone-400 uppercase tracking-widest ml-1">Conferma Password</label>
+              <div className="relative group">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-300 group-focus-within:text-emerald-500 transition-colors" />
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full pl-12 pr-12 py-4 bg-stone-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all outline-none text-stone-900 font-medium"
+                />
+              </div>
+            </div>
+          )}
 
           <div className="flex items-center justify-between px-1">
             <label className="flex items-center gap-3 cursor-pointer group">
@@ -152,7 +210,14 @@ export default function Login() {
         </div>
 
         <button
-          onClick={signInWithGoogle}
+          onClick={async () => {
+            setError(null);
+            try {
+              await signInWithGoogle();
+            } catch (err: any) {
+              setError(err.message || 'Errore durante l\'accesso con Google. Assicurati che i pop-up siano abilitati.');
+            }
+          }}
           className="mt-8 w-full flex items-center justify-center gap-3 py-4 border-2 border-stone-100 rounded-2xl font-bold text-stone-600 hover:bg-stone-50 hover:border-stone-200 transition-all active:scale-[0.98]"
         >
           <Chrome className="w-5 h-5 text-emerald-500" />

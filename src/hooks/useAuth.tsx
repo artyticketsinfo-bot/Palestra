@@ -9,7 +9,8 @@ import {
   createUserWithEmailAndPassword,
   setPersistence,
   browserLocalPersistence,
-  browserSessionPersistence
+  browserSessionPersistence,
+  updateProfile
 } from 'firebase/auth';
 import { auth } from '../firebase';
 
@@ -18,7 +19,7 @@ interface AuthContextType {
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
   signInWithEmail: (email: string, pass: string, remember: boolean) => Promise<void>;
-  signUpWithEmail: (email: string, pass: string) => Promise<void>;
+  signUpWithEmail: (email: string, pass: string, firstName: string, lastName: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -46,8 +47,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await signInWithEmailAndPassword(auth, email, pass);
   };
 
-  const signUpWithEmail = async (email: string, pass: string) => {
-    await createUserWithEmailAndPassword(auth, email, pass);
+  const signUpWithEmail = async (email: string, pass: string, firstName: string, lastName: string) => {
+    const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
+    if (userCredential.user) {
+      await updateProfile(userCredential.user, {
+        displayName: `${firstName} ${lastName}`
+      });
+    }
   };
 
   const logout = async () => {
