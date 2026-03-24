@@ -1,0 +1,125 @@
+{
+  "entities": {
+    "Client": {
+      "title": "Client",
+      "description": "A gym member with personal and contact information.",
+      "type": "object",
+      "properties": {
+        "firstName": { "type": "string", "description": "First name of the client" },
+        "lastName": { "type": "string", "description": "Last name of the client" },
+        "email": { "type": "string", "format": "email", "description": "Email address" },
+        "phone": { "type": "string", "description": "Phone number" },
+        "gender": { "type": "string", "enum": ["M", "F", "Other"], "description": "Gender" },
+        "birthDate": { "type": "string", "format": "date", "description": "Date of birth" },
+        "taxCode": { "type": "string", "description": "Codice Fiscale" },
+        "address": { "type": "string", "description": "Street address" },
+        "civicNumber": { "type": "string", "description": "Civic number" },
+        "zipCode": { "type": "string", "description": "ZIP code" },
+        "city": { "type": "string", "description": "City" },
+        "clientCode": { "type": "string", "description": "Unique client code" },
+        "registrationDate": { "type": "string", "format": "date-time", "description": "Date of registration" },
+        "createdBy": { "type": "string", "description": "UID of the user who created this client" }
+      },
+      "required": ["firstName", "lastName", "email", "clientCode", "createdBy"]
+    },
+    "Membership": {
+      "title": "Membership",
+      "description": "A subscription plan for a client.",
+      "type": "object",
+      "properties": {
+        "clientId": { "type": "string", "description": "ID of the client" },
+        "startDate": { "type": "string", "format": "date-time", "description": "Start date" },
+        "endDate": { "type": "string", "format": "date-time", "description": "End date" },
+        "type": { "type": "string", "description": "Type of membership (e.g., Monthly, Annual)" },
+        "price": { "type": "number", "description": "Price of the membership" },
+        "status": { "type": "string", "enum": ["Active", "Expired", "Cancelled"], "description": "Current status" },
+        "createdBy": { "type": "string", "description": "UID of the user who created this membership" }
+      },
+      "required": ["clientId", "startDate", "endDate", "type", "price", "status", "createdBy"]
+    },
+    "Invoice": {
+      "title": "Invoice",
+      "description": "A billing document for services or products.",
+      "type": "object",
+      "properties": {
+        "clientId": { "type": "string", "description": "ID of the client" },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "description": { "type": "string" },
+              "price": { "type": "number" },
+              "quantity": { "type": "number" }
+            }
+          }
+        },
+        "date": { "type": "string", "format": "date-time", "description": "Emission date" },
+        "dueDate": { "type": "string", "format": "date-time", "description": "Due date" },
+        "status": { "type": "string", "enum": ["Paid", "Pending", "Overdue"], "description": "Payment status" },
+        "total": { "type": "number", "description": "Total amount" },
+        "type": { "type": "string", "enum": ["Manual", "Recurring"], "description": "Invoice type" },
+        "createdBy": { "type": "string", "description": "UID of the user who created this invoice" }
+      },
+      "required": ["clientId", "date", "dueDate", "status", "total", "type", "createdBy"]
+    },
+    "Appointment": {
+      "title": "Appointment",
+      "description": "A scheduled session or class.",
+      "type": "object",
+      "properties": {
+        "clientId": { "type": "string", "description": "ID of the client" },
+        "dateTime": { "type": "string", "format": "date-time", "description": "Date and time of the appointment" },
+        "duration": { "type": "number", "description": "Duration in minutes" },
+        "notes": { "type": "string", "description": "Additional notes" },
+        "service": { "type": "string", "description": "Service type (e.g., PT Session)" },
+        "createdBy": { "type": "string", "description": "UID of the user who created this appointment" }
+      },
+      "required": ["clientId", "dateTime", "duration", "service", "createdBy"]
+    },
+    "Staff": {
+      "title": "Staff",
+      "description": "A gym employee or collaborator.",
+      "type": "object",
+      "properties": {
+        "firstName": { "type": "string", "description": "First name" },
+        "lastName": { "type": "string", "description": "Last name" },
+        "email": { "type": "string", "format": "email", "description": "Email address" },
+        "phone": { "type": "string", "description": "Phone number" },
+        "gender": { "type": "string", "enum": ["M", "F", "Other"], "description": "Gender" },
+        "birthDate": { "type": "string", "format": "date", "description": "Date of birth" },
+        "role": { "type": "string", "description": "Role (PT, Reception, etc.)" },
+        "specialization": { "type": "string", "description": "Specialization" },
+        "availability": { "type": "string", "description": "Availability notes" },
+        "color": { "type": "string", "description": "Identifying color (Hex)" },
+        "active": { "type": "boolean", "description": "Whether the staff member is active" },
+        "hiringDate": { "type": "string", "format": "date", "description": "Hiring date" },
+        "salary": { "type": "number", "description": "Salary or pay rate" },
+        "photoUrl": { "type": "string", "description": "URL to the staff member's photo" },
+        "createdBy": { "type": "string", "description": "UID of the user who created this staff member" }
+      },
+      "required": ["firstName", "lastName", "email", "role", "color", "active", "createdBy"]
+    },
+    "GymSettings": {
+      "title": "GymSettings",
+      "description": "Configuration settings for the gym.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "website": { "type": "string" },
+        "address": { "type": "string" },
+        "themeColor": { "type": "string" }
+      }
+    }
+  },
+  "firestore": {
+    "/clients/{clientId}": { "schema": "Client", "description": "Gym clients" },
+    "/memberships/{membershipId}": { "schema": "Membership", "description": "Client subscriptions" },
+    "/invoices/{invoiceId}": { "schema": "Invoice", "description": "Billing records" },
+    "/appointments/{appointmentId}": { "schema": "Appointment", "description": "Scheduled activities" },
+    "/staff/{staffId}": { "schema": "Staff", "description": "Gym staff members" },
+    "/settings/{userId}": { "schema": "GymSettings", "description": "User-specific gym settings" }
+  }
+}

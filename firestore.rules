@@ -1,0 +1,108 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isDocOwner() {
+      return isAuthenticated() && request.auth.uid == resource.data.createdBy;
+    }
+
+    function isNewDocOwner() {
+      return isAuthenticated() && request.auth.uid == request.resource.data.createdBy;
+    }
+
+    function isValidString(val, min, max) {
+      return val is string && val.size() >= min && val.size() <= max;
+    }
+
+    // Domain Validators
+    function isValidClient(data) {
+      return data.keys().hasAll(['firstName', 'lastName', 'email', 'clientCode', 'createdBy']) &&
+             isValidString(data.firstName, 1, 100) &&
+             isValidString(data.lastName, 1, 100) &&
+             data.email is string &&
+             data.createdBy == request.auth.uid;
+    }
+
+    function isValidMembership(data) {
+      return data.keys().hasAll(['clientId', 'startDate', 'endDate', 'type', 'price', 'status', 'createdBy']) &&
+             data.price is number && data.price >= 0 &&
+             data.status in ['Active', 'Expired', 'Cancelled'] &&
+             data.createdBy == request.auth.uid;
+    }
+
+    function isValidInvoice(data) {
+      return data.keys().hasAll(['date', 'dueDate', 'status', 'total', 'type', 'createdBy', 'items', 'clientData', 'issuerData']) &&
+             data.total is number && data.total >= 0 &&
+             data.status in ['Paid', 'Pending', 'Overdue'] &&
+             data.type in ['Manual', 'Automatic'] &&
+             data.createdBy == request.auth.uid &&
+             data.items is list &&
+             data.clientData is map &&
+             data.issuerData is map;
+    }
+
+    function isValidAppointment(data) {
+      return data.keys().hasAll(['clientId', 'dateTime', 'duration', 'service', 'createdBy']) &&
+             data.duration is number && data.duration > 0 &&
+             data.createdBy == request.auth.uid;
+    }
+
+    function isValidStaff(data) {
+      return data.keys().hasAll(['firstName', 'lastName', 'email', 'role', 'color', 'active', 'createdBy']) &&
+             isValidString(data.firstName, 1, 100) &&
+             isValidString(data.lastName, 1, 100) &&
+             data.email is string &&
+             data.active is bool &&
+             data.createdBy == request.auth.uid;
+    }
+
+    // Rules
+    match /clients/{clientId} {
+      allow read: if isAuthenticated();
+      allow create: if isValidClient(request.resource.data);
+      allow update: if isDocOwner() && isValidClient(request.resource.data);
+      allow delete: if isDocOwner();
+    }
+
+    match /memberships/{membershipId} {
+      allow read: if isAuthenticated();
+      allow create: if isValidMembership(request.resource.data);
+      allow update: if isDocOwner() && isValidMembership(request.resource.data);
+      allow delete: if isDocOwner();
+    }
+
+    match /invoices/{invoiceId} {
+      allow read: if isAuthenticated();
+      allow create: if isValidInvoice(request.resource.data);
+      allow update: if isDocOwner() && isValidInvoice(request.resource.data);
+      allow delete: if isDocOwner();
+    }
+
+    match /appointments/{appointmentId} {
+      allow read: if isAuthenticated();
+      allow create: if isValidAppointment(request.resource.data);
+      allow update: if isDocOwner() && isValidAppointment(request.resource.data);
+      allow delete: if isDocOwner();
+    }
+
+    match /staff/{staffId} {
+      allow read: if isAuthenticated();
+      allow create: if isValidStaff(request.resource.data);
+      allow update: if isDocOwner() && isValidStaff(request.resource.data);
+      allow delete: if isDocOwner();
+    }
+
+    match /settings/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+  }
+}
